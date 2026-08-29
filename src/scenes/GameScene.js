@@ -1,11 +1,11 @@
 import Phaser from "phaser";
 
-import Player from "../objects/player.js";
-import Trap from "../objects/trap.js";
+import Player from "../objects/Player.js";
+import Trap from "../objects/Trap.js";
 
-import level1 from "../levels/level1.js";
-import level2 from "../levels/level2.js";
-import level3 from "../levels/level3.js";
+import level1 from "../levels/Level1.js";
+import level2 from "../levels/Level2.js";
+import level3 from "../levels/Level3.js";
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -15,7 +15,6 @@ export default class GameScene extends Phaser.Scene {
   init(data) {
     this.levelNumber = data.level || 1;
     this.deaths = data.deaths || 0;
-
     this.socket = null;
     this.playerId = null;
     this.remotePlayers = {};
@@ -96,7 +95,6 @@ export default class GameScene extends Phaser.Scene {
       );
 
       spike.activate();
-
       this.traps.add(spike);
     });
 
