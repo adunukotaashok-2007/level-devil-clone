@@ -8,7 +8,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this);
 
     this.setCollideWorldBounds(false);
-
     this.setBounce(0);
 
     this.speed = 240;
@@ -19,6 +18,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   update(cursors, keys) {
     if (this.dead) {
+      return;
+    }
+
+    if (!cursors || !keys) {
       return;
     }
 
@@ -46,6 +49,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (
       jump &&
+      this.body &&
       this.body.blocked.down
     ) {
       this.setVelocityY(-this.jumpPower);
@@ -62,7 +66,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.setVelocity(0, 0);
 
     this.scene.time.delayedCall(300, () => {
-      this.scene.playerDied();
+      if (
+        this.scene &&
+        typeof this.scene.playerDied === "function"
+      ) {
+        this.scene.playerDied();
+      }
     });
   }
 }
