@@ -35,7 +35,8 @@ export default class LevelSelectScene extends Phaser.Scene {
     const levels = [1, 2, 3];
 
     levels.forEach((level, index) => {
-      const x = 250 + index * 230;
+      const x =
+        width / 2 - 230 + index * 230;
 
       const button = this.add
         .text(
@@ -81,7 +82,8 @@ export default class LevelSelectScene extends Phaser.Scene {
             "GameScene",
             {
               level: level,
-              deaths: 0
+              deaths: 0,
+              multiplayer: false
             }
           );
         }
@@ -100,10 +102,10 @@ export default class LevelSelectScene extends Phaser.Scene {
           color: "#333333",
           backgroundColor: "#ffffff",
           padding: {
-            left: 15,
-            right: 15,
-            top: 8,
-            bottom: 8
+            left: 20,
+            right: 20,
+            top: 10,
+            bottom: 10
           }
         }
       )
