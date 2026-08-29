@@ -15,9 +15,11 @@ export default class GameScene extends Phaser.Scene {
   init(data) {
     this.levelNumber = data.level || 1;
     this.deaths = data.deaths || 0;
+
     this.socket = null;
     this.playerId = null;
     this.remotePlayers = {};
+
     this.multiplayerConnected = false;
     this.levelFinished = false;
   }
@@ -32,7 +34,6 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createBackground() {
-    // Sky background
     this.add.rectangle(
       1200,
       300,
@@ -41,7 +42,6 @@ export default class GameScene extends Phaser.Scene {
       0x87ceeb
     );
 
-    // Lower ground area
     this.add.rectangle(
       1200,
       520,
@@ -64,26 +64,34 @@ export default class GameScene extends Phaser.Scene {
 
     this.levelData = data;
 
-    // Platforms
+    // ==============================
+    // PLATFORMS
+    // ==============================
+
     this.platforms =
       this.physics.add.staticGroup();
 
     data.platforms.forEach((platform) => {
-      const object = this.platforms
-        .create(
-          platform.x,
-          platform.y,
-          "platform"
-        )
-        .setOrigin(0.5);
+      const object = this.platforms.create(
+        platform.x,
+        platform.y,
+        "platform"
+      );
+
+      object.setOrigin(0.5);
 
       object.displayWidth =
         platform.width;
 
+      object.displayHeight = 20;
+
       object.refreshBody();
     });
 
-    // Traps
+    // ==============================
+    // TRAPS
+    // ==============================
+
     this.traps =
       this.physics.add.staticGroup();
 
@@ -95,10 +103,14 @@ export default class GameScene extends Phaser.Scene {
       );
 
       spike.activate();
+
       this.traps.add(spike);
     });
 
-    // Local player
+    // ==============================
+    // PLAYER
+    // ==============================
+
     this.player = new Player(
       this,
       data.player.x,
@@ -110,6 +122,10 @@ export default class GameScene extends Phaser.Scene {
       this.platforms
     );
 
+    // ==============================
+    // TRAP COLLISION
+    // ==============================
+
     this.physics.add.overlap(
       this.player,
       this.traps,
@@ -120,7 +136,10 @@ export default class GameScene extends Phaser.Scene {
       }
     );
 
-    // Finish
+    // ==============================
+    // FINISH
+    // ==============================
+
     this.finish = this.add.rectangle(
       data.finish.x,
       data.finish.y,
@@ -147,7 +166,10 @@ export default class GameScene extends Phaser.Scene {
       }
     );
 
-    // World boundaries
+    // ==============================
+    // WORLD BOUNDS
+    // ==============================
+
     this.physics.world.setBounds(
       0,
       0,
@@ -167,6 +189,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createUI() {
+    // ==============================
+    // DEATH COUNTER
+    // ==============================
+
     this.deathText = this.add
       .text(
         20,
@@ -181,6 +207,10 @@ export default class GameScene extends Phaser.Scene {
       )
       .setScrollFactor(0);
 
+    // ==============================
+    // LEVEL TEXT
+    // ==============================
+
     this.levelText = this.add
       .text(
         20,
@@ -189,10 +219,15 @@ export default class GameScene extends Phaser.Scene {
         {
           fontFamily: "Arial",
           fontSize: "20px",
-          color: "#000000"
+          color: "#000000",
+          fontStyle: "bold"
         }
       )
       .setScrollFactor(0);
+
+    // ==============================
+    // MULTIPLAYER STATUS
+    // ==============================
 
     this.multiplayerText = this.add
       .text(
@@ -206,6 +241,10 @@ export default class GameScene extends Phaser.Scene {
         }
       )
       .setScrollFactor(0);
+
+    // ==============================
+    // RESTART BUTTON
+    // ==============================
 
     const restart = this.add
       .text(
@@ -224,6 +263,20 @@ export default class GameScene extends Phaser.Scene {
       .setInteractive({
         useHandCursor: true
       });
+
+    restart.on(
+      "pointerover",
+      () => {
+        restart.setColor("#4ade80");
+      }
+    );
+
+    restart.on(
+      "pointerout",
+      () => {
+        restart.setColor("#ffffff");
+      }
+    );
 
     restart.on(
       "pointerdown",
@@ -251,13 +304,10 @@ export default class GameScene extends Phaser.Scene {
 
   setupMultiplayer() {
     /*
-      Replace this URL later with your
-      actual multiplayer WebSocket server.
+      Multiplayer server is not configured yet.
 
-      Example:
-
-      const serverURL =
-        "wss://your-server.example.com";
+      When you have a WebSocket server,
+      replace the URL below with your server URL.
     */
 
     const serverURL =
@@ -543,6 +593,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.updateRemotePlayerPositions();
 
+    // Player fell off the map
     if (
       this.player.y > 650 &&
       !this.player.dead
@@ -576,6 +627,10 @@ export default class GameScene extends Phaser.Scene {
 
     this.physics.pause();
 
+    // ==============================
+    // COMPLETE PANEL
+    // ==============================
+
     this.add
       .rectangle(
         400,
@@ -602,6 +657,10 @@ export default class GameScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setScrollFactor(0);
 
+    // ==============================
+    // NEXT BUTTON
+    // ==============================
+
     const next = this.add
       .text(
         400,
@@ -622,6 +681,20 @@ export default class GameScene extends Phaser.Scene {
       .setInteractive({
         useHandCursor: true
       });
+
+    next.on(
+      "pointerover",
+      () => {
+        next.setColor("#4ade80");
+      }
+    );
+
+    next.on(
+      "pointerout",
+      () => {
+        next.setColor("#ffffff");
+      }
+    );
 
     next.on(
       "pointerdown",
