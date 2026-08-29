@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 
-import Player from "../objects/Player.js";
-import Trap from "../objects/Trap.js";
+import Player from "../objects/player.js";
+import Trap from "../objects/trap.js";
 
 import level1 from "../levels/level1.js";
 import level2 from "../levels/level2.js";
@@ -14,37 +14,41 @@ export default class GameScene extends Phaser.Scene {
 
   init(data) {
     this.levelNumber = data.level || 1;
+    this.deaths = data.deaths || 0;
 
-    this.deaths = 0;
+    this.socket = null;
+    this.playerId = null;
+    this.remotePlayers = {};
+    this.multiplayerConnected = false;
+    this.levelFinished = false;
   }
 
   create() {
     this.createBackground();
-
     this.loadLevel();
-
     this.createControls();
-
     this.createUI();
-
     this.setupCamera();
+    this.setupMultiplayer();
   }
 
   createBackground() {
+    // Sky background
     this.add.rectangle(
       1200,
       300,
       3000,
       700,
-      0x171717
+      0x87ceeb
     );
 
+    // Lower ground area
     this.add.rectangle(
       1200,
       520,
       3000,
       40,
-      0x222222
+      0x7c7c7c
     );
   }
 
@@ -61,7 +65,9 @@ export default class GameScene extends Phaser.Scene {
 
     this.levelData = data;
 
-    this.platforms = this.physics.add.staticGroup();
+    // Platforms
+    this.platforms =
+      this.physics.add.staticGroup();
 
     data.platforms.forEach((platform) => {
       const object = this.platforms
@@ -72,11 +78,15 @@ export default class GameScene extends Phaser.Scene {
         )
         .setOrigin(0.5);
 
-      object.displayWidth = platform.width;
+      object.displayWidth =
+        platform.width;
+
       object.refreshBody();
     });
 
-    this.traps = this.physics.add.staticGroup();
+    // Traps
+    this.traps =
+      this.physics.add.staticGroup();
 
     data.traps.forEach((trap) => {
       const spike = new Trap(
@@ -85,9 +95,12 @@ export default class GameScene extends Phaser.Scene {
         trap.y
       );
 
+      spike.activate();
+
       this.traps.add(spike);
     });
 
+    // Local player
     this.player = new Player(
       this,
       data.player.x,
@@ -103,7 +116,9 @@ export default class GameScene extends Phaser.Scene {
       this.player,
       this.traps,
       () => {
-        this.player.kill();
+        if (!this.player.dead) {
+          this.player.kill();
+        }
       }
     );
 
@@ -125,7 +140,12 @@ export default class GameScene extends Phaser.Scene {
       this.player,
       this.finish,
       () => {
-        this.levelComplete();
+        if (
+          !this.player.dead &&
+          !this.levelFinished
+        ) {
+          this.levelComplete();
+        }
       }
     );
 
@@ -150,35 +170,69 @@ export default class GameScene extends Phaser.Scene {
 
   createUI() {
     this.deathText = this.add
-      .text(20, 20, "Deaths: 0", {
-        fontFamily: "Arial",
-        fontSize: "22px",
-        color: "#ffffff"
-      })
+      .text(
+        20,
+        20,
+        `Deaths: ${this.deaths}`,
+        {
+          fontFamily: "Arial",
+          fontSize: "22px",
+          color: "#000000",
+          fontStyle: "bold"
+        }
+      )
       .setScrollFactor(0);
 
     this.levelText = this.add
-      .text(20, 50, `Level ${this.levelNumber}`, {
-        fontFamily: "Arial",
-        fontSize: "20px",
-        color: "#aaaaaa"
-      })
+      .text(
+        20,
+        50,
+        `Level ${this.levelNumber}`,
+        {
+          fontFamily: "Arial",
+          fontSize: "20px",
+          color: "#000000"
+        }
+      )
+      .setScrollFactor(0);
+
+    this.multiplayerText = this.add
+      .text(
+        20,
+        80,
+        "Multiplayer: Connecting...",
+        {
+          fontFamily: "Arial",
+          fontSize: "17px",
+          color: "#000000"
+        }
+      )
       .setScrollFactor(0);
 
     const restart = this.add
-      .text(850, 20, "RESTART", {
-        fontFamily: "Arial",
-        fontSize: "20px",
-        color: "#ffffff",
-        backgroundColor: "#333333",
-        padding: 10
-      })
+      .text(
+        850,
+        20,
+        "RESTART",
+        {
+          fontFamily: "Arial",
+          fontSize: "20px",
+          color: "#ffffff",
+          backgroundColor: "#333333",
+          padding: 10
+        }
+      )
       .setScrollFactor(0)
-      .setInteractive({ useHandCursor: true });
+      .setInteractive({
+        useHandCursor: true
+      });
 
-    restart.on("pointerdown", () => {
-      this.restartLevel();
-    });
+    restart.on(
+      "pointerdown",
+      () => {
+        this.restartLevel();
+      }
+    );
   }
 
   setupCamera() {
@@ -197,17 +251,300 @@ export default class GameScene extends Phaser.Scene {
     );
   }
 
+  setupMultiplayer() {
+    /*
+      Replace this URL later with your
+      actual multiplayer WebSocket server.
+
+      Example:
+
+      const serverURL =
+        "wss://your-server.example.com";
+    */
+
+    const serverURL =
+      "wss://YOUR-MULTIPLAYER-SERVER";
+
+    if (
+      serverURL.includes(
+        "YOUR-MULTIPLAYER-SERVER"
+      )
+    ) {
+      this.multiplayerText.setText(
+        "Multiplayer: Server not configured"
+      );
+
+      return;
+    }
+
+    try {
+      this.socket =
+        new WebSocket(serverURL);
+
+      this.socket.onopen = () => {
+        this.multiplayerConnected =
+          true;
+
+        this.multiplayerText.setText(
+          "Multiplayer: Connected"
+        );
+
+        this.socket.send(
+          JSON.stringify({
+            type: "join",
+            level: this.levelNumber
+          })
+        );
+
+        this.sendPlayerData();
+      };
+
+      this.socket.onmessage =
+        (event) => {
+          try {
+            const data =
+              JSON.parse(event.data);
+
+            this.handleMultiplayerMessage(
+              data
+            );
+          } catch (error) {
+            console.error(
+              "Invalid multiplayer data:",
+              error
+            );
+          }
+        };
+
+      this.socket.onclose = () => {
+        this.multiplayerConnected =
+          false;
+
+        this.multiplayerText.setText(
+          "Multiplayer: Disconnected"
+        );
+      };
+
+      this.socket.onerror = () => {
+        this.multiplayerConnected =
+          false;
+
+        this.multiplayerText.setText(
+          "Multiplayer: Connection error"
+        );
+      };
+    } catch (error) {
+      console.error(
+        "Multiplayer error:",
+        error
+      );
+
+      this.multiplayerText.setText(
+        "Multiplayer: Offline"
+      );
+    }
+  }
+
+  sendPlayerData() {
+    if (
+      !this.socket ||
+      this.socket.readyState !==
+        WebSocket.OPEN
+    ) {
+      return;
+    }
+
+    if (!this.player) {
+      return;
+    }
+
+    this.socket.send(
+      JSON.stringify({
+        type: "playerMove",
+        x: this.player.x,
+        y: this.player.y,
+        velocityX:
+          this.player.body
+            ? this.player.body.velocity.x
+            : 0,
+        velocityY:
+          this.player.body
+            ? this.player.body.velocity.y
+            : 0,
+        level: this.levelNumber
+      })
+    );
+  }
+
+  handleMultiplayerMessage(data) {
+    if (data.type === "welcome") {
+      this.playerId = data.id;
+      return;
+    }
+
+    if (data.type === "players") {
+      this.updateRemotePlayers(
+        data.players
+      );
+      return;
+    }
+
+    if (data.type === "playerJoined") {
+      this.createRemotePlayer(
+        data.player
+      );
+      return;
+    }
+
+    if (data.type === "playerLeft") {
+      this.removeRemotePlayer(
+        data.id
+      );
+    }
+  }
+
+  updateRemotePlayers(players) {
+    if (!players) {
+      return;
+    }
+
+    Object.keys(players).forEach(
+      (id) => {
+        if (id === this.playerId) {
+          return;
+        }
+
+        const data = players[id];
+
+        if (
+          data.level &&
+          data.level !== this.levelNumber
+        ) {
+          return;
+        }
+
+        if (
+          !this.remotePlayers[id]
+        ) {
+          this.createRemotePlayer(
+            data
+          );
+        } else {
+          const remote =
+            this.remotePlayers[id];
+
+          remote.targetX = data.x;
+          remote.targetY = data.y;
+        }
+      }
+    );
+
+    Object.keys(
+      this.remotePlayers
+    ).forEach((id) => {
+      if (!players[id]) {
+        this.removeRemotePlayer(id);
+      }
+    });
+  }
+
+  createRemotePlayer(data) {
+    if (!data || !data.id) {
+      return;
+    }
+
+    if (
+      data.id === this.playerId
+    ) {
+      return;
+    }
+
+    if (
+      this.remotePlayers[data.id]
+    ) {
+      return;
+    }
+
+    const remote =
+      this.add.rectangle(
+        data.x || 100,
+        data.y || 400,
+        32,
+        42,
+        0xff3333
+      );
+
+    remote.targetX =
+      data.x || 100;
+
+    remote.targetY =
+      data.y || 400;
+
+    remote.playerId =
+      data.id;
+
+    this.remotePlayers[data.id] =
+      remote;
+  }
+
+  removeRemotePlayer(id) {
+    if (
+      !this.remotePlayers[id]
+    ) {
+      return;
+    }
+
+    this.remotePlayers[id].destroy();
+
+    delete this.remotePlayers[id];
+  }
+
+  updateRemotePlayerPositions() {
+    Object.values(
+      this.remotePlayers
+    ).forEach((remote) => {
+      if (
+        typeof remote.targetX ===
+        "number"
+      ) {
+        remote.x =
+          Phaser.Math.Linear(
+            remote.x,
+            remote.targetX,
+            0.25
+          );
+      }
+
+      if (
+        typeof remote.targetY ===
+        "number"
+      ) {
+        remote.y =
+          Phaser.Math.Linear(
+            remote.y,
+            remote.targetY,
+            0.25
+          );
+      }
+    });
+  }
+
   update() {
     if (!this.player) {
       return;
     }
 
-    this.player.update(
-      this.cursors,
-      this.keys
-    );
+    if (!this.player.dead) {
+      this.player.update(
+        this.cursors,
+        this.keys
+      );
+    }
 
-    // Player falls off the map.
+    this.sendPlayerData();
+
+    this.updateRemotePlayerPositions();
+
     if (
       this.player.y > 650 &&
       !this.player.dead
@@ -219,52 +556,57 @@ export default class GameScene extends Phaser.Scene {
   playerDied() {
     this.deaths++;
 
-    this.deathText.setText(
-      `Deaths: ${this.deaths}`
-    );
-
     this.scene.restart({
-      level: this.levelNumber
+      level: this.levelNumber,
+      deaths: this.deaths
     });
   }
 
   restartLevel() {
     this.scene.restart({
-      level: this.levelNumber
+      level: this.levelNumber,
+      deaths: this.deaths
     });
   }
 
   levelComplete() {
+    if (this.levelFinished) {
+      return;
+    }
+
+    this.levelFinished = true;
+
+    this.physics.pause();
+
     this.add
       .rectangle(
-        this.player.x,
+        400,
         270,
         500,
         200,
-        0x000000,
-        0.85
+        0xffffff,
+        0.92
       )
       .setScrollFactor(0);
 
-    const message = this.add
+    this.add
       .text(
-        this.cameras.main.scrollX + 480,
+        400,
         220,
         "LEVEL COMPLETE!",
         {
           fontFamily: "Arial",
           fontSize: "40px",
-          color: "#4ade80",
+          color: "#16a34a",
           fontStyle: "bold"
         }
       )
-      .setOrigin(0.5);
-
-    message.setScrollFactor(0);
+      .setOrigin(0.5)
+      .setScrollFactor(0);
 
     const next = this.add
       .text(
-        this.cameras.main.scrollX + 480,
+        400,
         300,
         this.levelNumber < 3
           ? "NEXT LEVEL"
@@ -283,18 +625,34 @@ export default class GameScene extends Phaser.Scene {
         useHandCursor: true
       });
 
-    next.on("pointerdown", () => {
-      if (this.levelNumber < 3) {
-        this.scene.restart({
-          level: this.levelNumber + 1
-        });
-      } else {
-        this.scene.start(
-          "LevelSelectScene"
-        );
+    next.on(
+      "pointerdown",
+      () => {
+        if (this.levelNumber < 3) {
+          this.scene.restart({
+            level:
+              this.levelNumber + 1,
+            deaths: 0
+          });
+        } else {
+          this.scene.start(
+            "LevelSelectScene"
+          );
+        }
       }
-    });
+    );
+  }
 
-    this.physics.pause();
+  shutdown() {
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+    }
+
+    Object.keys(
+      this.remotePlayers
+    ).forEach((id) => {
+      this.removeRemotePlayer(id);
+    });
   }
 }
