@@ -2,6 +2,7 @@
   "name": "level-devil-style-game",
   "version": "1.0.0",
   "description": "An original trap-based 2D multiplayer platformer",
+  "type": "module",
   "main": "src/main.js",
   "scripts": {
     "start": "vite",
