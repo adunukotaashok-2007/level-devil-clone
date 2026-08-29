@@ -304,10 +304,15 @@ export default class GameScene extends Phaser.Scene {
 
   setupMultiplayer() {
     /*
-      Multiplayer server is not configured yet.
+      IMPORTANT:
 
-      When you have a WebSocket server,
-      replace the URL below with your server URL.
+      Replace this with your actual
+      WebSocket server address.
+
+      Example:
+
+      const serverURL =
+        "wss://your-server.example.com";
     */
 
     const serverURL =
