@@ -4,6 +4,7 @@ import BootScene from "./scenes/BootScene.js";
 import MenuScene from "./scenes/MenuScene.js";
 import LevelSelectScene from "./scenes/LevelSelectScene.js";
 import GameScene from "./scenes/GameScene.js";
+import MultiplayerScene from "./scenes/MultiplayerScene.js";
 
 const config = {
   type: Phaser.AUTO,
@@ -13,14 +14,16 @@ const config = {
 
   parent: "game",
 
-  backgroundColor: "#151515",
+  backgroundColor: "#87CEEB",
 
   physics: {
     default: "arcade",
+
     arcade: {
       gravity: {
         y: 1000
       },
+
       debug: false
     }
   },
@@ -34,7 +37,8 @@ const config = {
     BootScene,
     MenuScene,
     LevelSelectScene,
-    GameScene
+    GameScene,
+    MultiplayerScene
   ]
 };
 
