@@ -21,10 +21,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    if (!cursors || !keys) {
-      return;
-    }
-
     const left =
       cursors.left.isDown ||
       keys.A.isDown;
@@ -35,7 +31,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     const jump =
       Phaser.Input.Keyboard.JustDown(cursors.up) ||
-      Phaser.Input.Keyboard.JustDown(keys.W);
+      Phaser.Input.Keyboard.JustDown(keys.W) ||
+      Phaser.Input.Keyboard.JustDown(cursors.space);
 
     if (left) {
       this.setVelocityX(-this.speed);
@@ -49,7 +46,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (
       jump &&
-      this.body &&
       this.body.blocked.down
     ) {
       this.setVelocityY(-this.jumpPower);
@@ -65,13 +61,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.setVelocity(0, 0);
 
-    this.scene.time.delayedCall(300, () => {
-      if (
-        this.scene &&
-        typeof this.scene.playerDied === "function"
-      ) {
+    this.scene.time.delayedCall(
+      300,
+      () => {
         this.scene.playerDied();
       }
-    });
+    );
   }
 }
