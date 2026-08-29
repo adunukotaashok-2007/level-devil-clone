@@ -8,7 +8,10 @@ export default class LevelSelectScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
 
-    // Background
+    // ==========================================
+    // BACKGROUND
+    // ==========================================
+
     this.add.rectangle(
       width / 2,
       height / 2,
@@ -17,7 +20,10 @@ export default class LevelSelectScene extends Phaser.Scene {
       0x87ceeb
     );
 
-    // Title
+    // ==========================================
+    // TITLE
+    // ==========================================
+
     this.add
       .text(
         width / 2,
@@ -31,6 +37,10 @@ export default class LevelSelectScene extends Phaser.Scene {
         }
       )
       .setOrigin(0.5);
+
+    // ==========================================
+    // LEVEL BUTTONS
+    // ==========================================
 
     const levels = [1, 2, 3];
 
@@ -61,6 +71,7 @@ export default class LevelSelectScene extends Phaser.Scene {
           useHandCursor: true
         });
 
+      // Mouse over
       button.on(
         "pointerover",
         () => {
@@ -68,6 +79,7 @@ export default class LevelSelectScene extends Phaser.Scene {
         }
       );
 
+      // Mouse leaves
       button.on(
         "pointerout",
         () => {
@@ -75,6 +87,7 @@ export default class LevelSelectScene extends Phaser.Scene {
         }
       );
 
+      // Select level
       button.on(
         "pointerdown",
         () => {
@@ -90,7 +103,10 @@ export default class LevelSelectScene extends Phaser.Scene {
       );
     });
 
-    // Back button
+    // ==========================================
+    // BACK BUTTON
+    // ==========================================
+
     const back = this.add
       .text(
         width / 2,
@@ -114,6 +130,7 @@ export default class LevelSelectScene extends Phaser.Scene {
         useHandCursor: true
       });
 
+    // Back hover
     back.on(
       "pointerover",
       () => {
@@ -128,6 +145,7 @@ export default class LevelSelectScene extends Phaser.Scene {
       }
     );
 
+    // Back to menu
     back.on(
       "pointerdown",
       () => {
