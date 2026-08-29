@@ -1,4 +1,8 @@
 export default {
+  id: 3,
+
+  name: "Level 3",
+
   player: {
     x: 100,
     y: 400
