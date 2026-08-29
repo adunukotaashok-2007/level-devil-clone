@@ -8,11 +8,23 @@ export default class Trap extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this, true);
 
     this.activeTrap = false;
+
+    this.setVisible(false);
   }
 
   activate() {
     this.activeTrap = true;
 
     this.setVisible(true);
+
+    this.setActive(true);
+  }
+
+  deactivate() {
+    this.activeTrap = false;
+
+    this.setVisible(false);
+
+    this.setActive(false);
   }
 }
