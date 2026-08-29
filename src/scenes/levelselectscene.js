@@ -6,15 +6,30 @@ export default class LevelSelectScene extends Phaser.Scene {
   }
 
   create() {
-    const { width } = this.scale;
+    const { width, height } = this.scale;
 
+    // Background
+    this.add.rectangle(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      0x87ceeb
+    );
+
+    // Title
     this.add
-      .text(width / 2, 70, "SELECT LEVEL", {
-        fontFamily: "Arial",
-        fontSize: "48px",
-        color: "#ffffff",
-        fontStyle: "bold"
-      })
+      .text(
+        width / 2,
+        70,
+        "SELECT LEVEL",
+        {
+          fontFamily: "Arial",
+          fontSize: "48px",
+          color: "#000000",
+          fontStyle: "bold"
+        }
+      )
       .setOrigin(0.5);
 
     const levels = [1, 2, 3];
@@ -23,47 +38,99 @@ export default class LevelSelectScene extends Phaser.Scene {
       const x = 250 + index * 230;
 
       const button = this.add
-        .text(x, 260, `LEVEL ${level}`, {
-          fontFamily: "Arial",
-          fontSize: "30px",
-          color: "#ffffff",
-          backgroundColor: "#333333",
-          padding: {
-            left: 20,
-            right: 20,
-            top: 15,
-            bottom: 15
+        .text(
+          x,
+          260,
+          `LEVEL ${level}`,
+          {
+            fontFamily: "Arial",
+            fontSize: "30px",
+            color: "#ffffff",
+            backgroundColor: "#333333",
+            padding: {
+              left: 20,
+              right: 20,
+              top: 15,
+              bottom: 15
+            }
           }
-        })
+        )
         .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true });
-
-      button.on("pointerover", () => {
-        button.setColor("#4ade80");
-      });
-
-      button.on("pointerout", () => {
-        button.setColor("#ffffff");
-      });
-
-      button.on("pointerdown", () => {
-        this.scene.start("GameScene", {
-          level: level
+        .setInteractive({
+          useHandCursor: true
         });
-      });
+
+      button.on(
+        "pointerover",
+        () => {
+          button.setColor("#4ade80");
+        }
+      );
+
+      button.on(
+        "pointerout",
+        () => {
+          button.setColor("#ffffff");
+        }
+      );
+
+      button.on(
+        "pointerdown",
+        () => {
+          this.scene.start(
+            "GameScene",
+            {
+              level: level,
+              deaths: 0
+            }
+          );
+        }
+      );
     });
 
+    // Back button
     const back = this.add
-      .text(width / 2, 440, "BACK", {
-        fontFamily: "Arial",
-        fontSize: "24px",
-        color: "#aaaaaa"
-      })
+      .text(
+        width / 2,
+        440,
+        "BACK",
+        {
+          fontFamily: "Arial",
+          fontSize: "24px",
+          color: "#333333",
+          backgroundColor: "#ffffff",
+          padding: {
+            left: 15,
+            right: 15,
+            top: 8,
+            bottom: 8
+          }
+        }
+      )
       .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+      .setInteractive({
+        useHandCursor: true
+      });
 
-    back.on("pointerdown", () => {
-      this.scene.start("MenuScene");
-    });
+    back.on(
+      "pointerover",
+      () => {
+        back.setColor("#16a34a");
+      }
+    );
+
+    back.on(
+      "pointerout",
+      () => {
+        back.setColor("#333333");
+      }
+    );
+
+    back.on(
+      "pointerdown",
+      () => {
+        this.scene.start("MenuScene");
+      }
+    );
   }
 }
