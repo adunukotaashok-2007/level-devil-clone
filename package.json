@@ -1,15 +1,17 @@
 {
   "name": "level-devil-style-game",
   "version": "1.0.0",
-  "description": "An original trap-based 2D platformer",
+  "description": "An original trap-based 2D multiplayer platformer",
   "main": "src/main.js",
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node server.js"
   },
   "dependencies": {
-    "phaser": "^3.90.0"
+    "phaser": "^3.90.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "vite": "^7.0.0"
